@@ -10,4 +10,4 @@ sub {
     sub { peek_my 0 };
 }->()->();
 
-pass;
+pass 'no segfault when trying to peek into a freed lexical';

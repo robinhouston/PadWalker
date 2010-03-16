@@ -244,7 +244,7 @@ pads_into_hash(AV* pad_namelist, AV* pad_vallist, HV* my_hash, HV* our_hash, U32
               }
 
               hv_store((is_our ? our_hash : my_hash), name_str, name_len,
-                       newRV_inc(val_sv), 0);
+                       (val_sv ? newRV_inc(val_sv) : &PL_sv_undef), 0);
             }
           }
         }
