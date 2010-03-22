@@ -456,6 +456,35 @@ up_cv(I32 uplevel, const char * caller_name)
     }
 }
 
+STATIC bool
+is_scalar_type(SV *sv) {
+    switch (SvTYPE(sv)) {
+        case SVt_NULL:
+        case SVt_IV:
+        case SVt_RV:
+        case SVt_NV:
+        case SVt_PV:
+        case SVt_PVIV:
+        case SVt_PVNV:
+        case SVt_PVMG:
+        case SVt_PVLV:
+            return 1;
+        case SVt_PVGV:
+            return !isGV_with_GP(sv);
+        default:
+            return 0;
+    }
+}
+
+STATIC bool
+is_correct_type(SV *orig, SV *restore) {
+    return (
+        ( SvTYPE(orig) == SvTYPE(restore) )
+            ||
+        ( is_scalar_type(orig) && is_scalar_type(restore) )
+    );
+}
+
 
 MODULE = PadWalker              PACKAGE = PadWalker
 PROTOTYPES: DISABLE             
@@ -497,8 +526,6 @@ CV* cv;
     EXTEND(SP, 1);
     PUSHs(sv_2mortal(newRV_noinc((SV*)ret)));
 
-
-
 void
 set_closed_over(sv, pad)
 SV* sv;
@@ -524,8 +551,9 @@ HV* pad;
             if ( SvROK(*restore_ref) ) {
               SV *restore = SvRV(*restore_ref);
               SV **orig = av_fetch(pad_vallist, i, 0);
+              int restore_type = SvTYPE(restore);
 
-              if ( !orig || !*orig || strcmp(sv_reftype(*orig, 0), sv_reftype(restore, 0)) == 0 ) {
+              if ( !orig || !*orig || is_correct_type(*orig, restore) ) {
                 SvREFCNT_inc(restore);
 
                 if ( av_store(pad_vallist, i, restore) == NULL )

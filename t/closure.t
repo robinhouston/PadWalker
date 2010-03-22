@@ -1,7 +1,7 @@
 use strict; use warnings;
 use PadWalker 'closed_over', 'set_closed_over';
 
-print "1..28\n";
+print "1..29\n";
 
 my $x=2;
 my $h = closed_over (my $sub = sub {my $y = $x++});
@@ -64,6 +64,7 @@ print (keys %$indices == 0 ? "ok 16\n" : "not ok 16\n");
     my $x     = 1;
     my @foo   = ();
     my $other = 5;
+    my $ref   = \"foo";
     my $h     = closed_over( my $sub = sub { my $y = $x++; push @foo, $y; $y } );
 
     my @keys = keys %$h;
@@ -97,4 +98,9 @@ print (keys %$indices == 0 ? "ok 16\n" : "not ok 16\n");
     eval { set_closed_over( $sub, { '@foo' => \"foo" } ) };
 
     print( $@ ? "ok 28\n" : "not ok 28\n" );
+
+    # test that REF and SCALAR are interchangiable
+    eval { set_closed_over( $sub, { '$x' => \$ref } ) };
+
+    print( $@ ? "not ok 29\n" : "ok 29\n" );
 }
