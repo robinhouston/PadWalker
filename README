@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-| PadWalker v1.9    - Robin Houston
+| PadWalker v1.92    - Robin Houston
 -----------------------------------------------------------------------------
 
 NAME
@@ -106,13 +106,14 @@ DESCRIPTION
 AUTHOR
        Robin Houston <robin@cpan.org>
 
-       With contributions from Richard Soberberg, bug-spotting from Peter
-       Scott and Dave Mitchell, and suggestions from demerphq.
+       With contributions from Richard Soberberg, Florian Ragwitz, Yuval Kogman, and
+       Fuji, Goro, bug-spotting from Peter Scott and Dave Mitchell, and suggestions
+       from demerphq.
 
 SEE ALSO
        Devel::LexAlias, Devel::Caller, Sub::Parameters
 
 COPYRIGHT
-       Copyright (c) 2000-2009, Robin Houston. All Rights Reserved.  This mod-
+       Copyright (c) 2000-2010, Robin Houston. All Rights Reserved.  This mod-
        ule is free software. It may be used, redistributed and/or modified
        under the same terms as Perl itself.

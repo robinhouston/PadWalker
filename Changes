@@ -126,3 +126,12 @@ of time. Sorry about that.
 1.9  Fri 26 Jun 2009 10:01:17 BST
 	- Identical to 1.8, but with the bogus metadata ._ files removed
 	  from the distributed tar file.
+
+1.91  Wed 14 Jul 2010 01:07:05 BST
+	- Incorporate patches from Florian Ragwitz and Yuval Kogman
+          (see http://github.com/robinhouston/PadWalker/commits/master)
+
+1.92  Thu 15 Jul 2010 17:05:05 BST
+	- Remove "Jobsian dot file cruft" reported by Steve Mynott.
+	- Incorporate patch from Fuji, Goro, correcting earlier patch from Yuval Kogman.
+
