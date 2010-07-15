@@ -34,5 +34,5 @@ WriteMakefile(
     'INC'	=> '',     # e.g., '-I/usr/include/other',
     ($DEBUGGING ? (CCFLAGS => '-Wall -ansi') : ()),
     'NO_META'   => 1,
-    dist => {TAR => 'gnutar'}
+    dist => {TAR => 'env COPYFILE_DISABLE=true tar'}
 );
