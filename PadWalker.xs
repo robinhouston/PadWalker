@@ -2,6 +2,10 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#ifndef isGV_with_GP
+#define isGV_with_GP(x) isGV(x)
+#endif
+
 #ifndef CxOLD_OP_TYPE
 #  define CxOLD_OP_TYPE(cx)      (0 + (cx)->blk_eval.old_op_type)
 #endif
@@ -458,22 +462,13 @@ up_cv(I32 uplevel, const char * caller_name)
 
 STATIC bool
 is_scalar_type(SV *sv) {
-    switch (SvTYPE(sv)) {
-        case SVt_NULL:
-        case SVt_IV:
-        case SVt_RV:
-        case SVt_NV:
-        case SVt_PV:
-        case SVt_PVIV:
-        case SVt_PVNV:
-        case SVt_PVMG:
-        case SVt_PVLV:
-            return 1;
-        case SVt_PVGV:
-            return !isGV_with_GP(sv);
-        default:
-            return 0;
-    }
+    return !(
+        SvTYPE(sv) == SVt_PVAV
+     || SvTYPE(sv) == SVt_PVHV
+     || SvTYPE(sv) == SVt_PVCV
+     || isGV_with_GP(sv)
+     || SvTYPE(sv) == SVt_PVIO
+   );
 }
 
 STATIC bool
