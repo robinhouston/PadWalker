@@ -33,6 +33,6 @@ WriteMakefile(
     'DEFINE'	=> $DEBUGGING,
     'INC'	=> '',     # e.g., '-I/usr/include/other',
     ($DEBUGGING ? (CCFLAGS => '-Wall -ansi') : ()),
-    'NO_META'   => 1,
-    dist => {TAR => 'env COPYFILE_DISABLE=true tar'}
+    dist => {TAR => 'env COPYFILE_DISABLE=true tar'},
+    PREREQ_PM => {perl => "5.008002"},
 );

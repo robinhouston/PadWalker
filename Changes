@@ -135,3 +135,9 @@ of time. Sorry about that.
 	- Remove "Jobsian dot file cruft" reported by Steve Mynott.
 	- Incorporate patch from Fuji, Goro, correcting earlier patch from Yuval Kogman.
 
+1.93  Sun  5 Feb 2012 15:52:57 GMT
+	- Correct the version number in META.yml
+	    (https://rt.cpan.org/Ticket/Display.html?id=59459)
+      Do this by using MakeMaker to auto-generate META.yml, to prevent
+      similar problems in future.
+
