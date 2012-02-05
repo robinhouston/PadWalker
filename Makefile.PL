@@ -34,5 +34,5 @@ WriteMakefile(
     'INC'	=> '',     # e.g., '-I/usr/include/other',
     ($DEBUGGING ? (CCFLAGS => '-Wall -ansi') : ()),
     dist => {TAR => 'env COPYFILE_DISABLE=true tar'},
-    PREREQ_PM => {perl => "5.008002"},
+    MIN_PERL_VERSION => "5.008002",
 );
