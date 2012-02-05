@@ -139,5 +139,8 @@ of time. Sorry about that.
 	- Correct the version number in META.yml
 	    (https://rt.cpan.org/Ticket/Display.html?id=59459)
       Do this by using MakeMaker to auto-generate META.yml, to prevent
-      similar problems in future.
+      similar problems in future. This is possible because the new
+      MakeMaker parameter MIN_PERL_VERSION was added in MakeMaker 6.47_01;
+      the fact that this didn’t used to exist is the reason we managed META.yml
+      by hand till now.
 
