@@ -71,6 +71,25 @@ show_cxstack(void)
 #  define COP_SEQ_RANGE_HIGH(sv)                 U_32(SvUVX(sv))
 #endif
 
+#ifndef PadARRAY
+typedef AV PADNAMELIST;
+typedef SV PADNAME;
+# if PERL_VERSION < 9
+typedef AV PADLIST;
+typedef AV PAD;
+# endif
+# define PadlistARRAY(pl)	((PAD **)AvARRAY(pl))
+# define PadlistMAX(pl)		AvFILLp(pl)
+# define PadlistNAMES(pl)	(*PadlistARRAY(pl))
+# define PadnamelistARRAY(pnl)	((PADNAME **)AvARRAY(pnl))
+# define PadnamelistMAX(pnl)	AvFILLp(pnl)
+# define PadARRAY		AvARRAY
+# define PadnameIsOUR(pn)	!!(SvFLAGS(pn) & SVpad_OUR)
+# define PadnameOURSTASH(pn)	SvOURSTASH(pn)
+# define PadnameOUTER(pn)	!!SvFAKE(pn)
+# define PadnamePV(pn)		(SvPOKp(pn) ? SvPVX(pn) : NULL)
+#endif
+
 
 /* Originally stolen from pp_ctl.c; now significantly different */
 
@@ -181,25 +200,24 @@ fetch_from_stash(HV *stash, char *name_str, U32 name_len)
 }
 
 void
-pads_into_hash(AV* pad_namelist, AV* pad_vallist, HV* my_hash, HV* our_hash, U32 valid_at_seq)
+pads_into_hash(PADNAMELIST* pad_namelist, PAD* pad_vallist, HV* my_hash,
+               HV* our_hash, U32 valid_at_seq)
 {
     I32 i;
 
     debug_print(("pads_into_hash(%p, %p, ..)\n",
         (void*)pad_namelist, (void*) pad_vallist));
 
-    for (i=av_len(pad_namelist); i>=0; --i) {
-      SV** name_ptr = av_fetch(pad_namelist, i, 0);
+    for (i=PadnamelistMAX(pad_namelist); i>=0; --i) {
+      PADNAME* name_sv = PadnamelistARRAY(pad_namelist)[i];
 
-      if (name_ptr) {
-        SV*   name_sv = *name_ptr;
-
-        if (SvPOKp(name_sv)) {
-          char* name_str = SvPVX(name_sv);
+      if (name_sv) {
+        char *name_str = PadnamePV(name_sv);
+        if (name_str) {
 
         debug_print(("** %s (%lx,%lx) [%lx]%s\n", name_str,
                COP_SEQ_RANGE_LOW(name_sv), COP_SEQ_RANGE_HIGH(name_sv), valid_at_seq,
-               SvFAKE(name_sv) ? " <fake>" : ""));
+               PadnameOUTER(name_sv) ? " <fake>" : ""));
         
         /* Check that this variable is valid at the cop_seq
          * specified, by peeking into the NV and IV slots
@@ -215,13 +233,13 @@ pads_into_hash(AV* pad_namelist, AV* pad_vallist, HV* my_hash, HV* our_hash, U32
          * them out of the stash directly.
          */
 
-        if ((SvFAKE(name_sv) || 0 == valid_at_seq ||
+        if ((PadnameOUTER(name_sv) || 0 == valid_at_seq ||
             (valid_at_seq <= COP_SEQ_RANGE_HIGH(name_sv) &&
             valid_at_seq > COP_SEQ_RANGE_LOW(name_sv))) &&
             strlen(name_str) > 1 )
 
           {
-            SV **val_ptr, *val_sv;
+            SV *val_sv;
             U32 name_len = strlen(name_str);
             bool is_our = ((SvFLAGS(name_sv) & SVpad_OUR) != 0);
 
@@ -235,7 +253,8 @@ pads_into_hash(AV* pad_namelist, AV* pad_vallist, HV* my_hash, HV* our_hash, U32
             }
             else {
               if (is_our) {
-                val_sv = fetch_from_stash(SvOURSTASH(name_sv), name_str, name_len);
+                val_sv = fetch_from_stash(PadnameOURSTASH(name_sv),
+                                          name_str, name_len);
                 if (!val_sv) {
                     debug_print(("Value of our variable is undefined\n"));
                     val_sv = &PL_sv_undef;
@@ -243,8 +262,9 @@ pads_into_hash(AV* pad_namelist, AV* pad_vallist, HV* my_hash, HV* our_hash, U32
               }
               else
               {
-                val_ptr = pad_vallist ? av_fetch(pad_vallist, i, 0) : 0;
-                val_sv = val_ptr ? *val_ptr : &PL_sv_undef;
+                val_sv =
+                  pad_vallist ? PadARRAY(pad_vallist)[i] : &PL_sv_undef;
+                if (!val_sv) val_sv = &PL_sv_undef;
               }
 
               hv_store((is_our ? our_hash : my_hash), name_str, name_len,
@@ -257,15 +277,17 @@ pads_into_hash(AV* pad_namelist, AV* pad_vallist, HV* my_hash, HV* our_hash, U32
 }
 
 void
-padlist_into_hash(AV* padlist, HV* my_hash, HV* our_hash, U32 valid_at_seq, long depth)
+padlist_into_hash(PADLIST* padlist, HV* my_hash, HV* our_hash,
+                  U32 valid_at_seq, long depth)
 {
-    AV *pad_namelist, *pad_vallist;
+    PADNAMELIST *pad_namelist;
+    PAD *pad_vallist;
     
     if (depth == 0) depth = 1;
 
     /* We blindly deref this, cos it's always there (AFAIK!) */
-    pad_namelist = (AV*) *av_fetch(padlist, 0, FALSE);
-    pad_vallist  = (AV*) *av_fetch(padlist, depth, FALSE);
+    pad_namelist = PadlistNAMES(padlist);
+    pad_vallist  = PadlistARRAY(padlist)[depth];
 
     pads_into_hash(pad_namelist, pad_vallist, my_hash, our_hash, valid_at_seq);
 }
@@ -363,30 +385,30 @@ get_closed_over(CV *cv, HV *hash, HV *indices)
 {
     I32 i;
     U32 val_depth;
-    AV *pad_namelist;
-    AV *pad_vallist;
+    PADNAMELIST *pad_namelist;
+    PAD *pad_vallist;
 
     if (!CvPADLIST(cv)) {
         return;
     }
 
     val_depth = CvDEPTH(cv) ? CvDEPTH(cv) : 1;
-    pad_namelist = (AV*) *av_fetch(CvPADLIST(cv), 0, FALSE);
-    pad_vallist  = (AV*) *av_fetch(CvPADLIST(cv), val_depth, FALSE);
+    pad_namelist = PadlistNAMES(CvPADLIST(cv));
+    pad_vallist  = PadlistARRAY(CvPADLIST(cv))[val_depth];
 
-    debug_print(("av_len(CvPADLIST(cv)) = %ld\n", av_len(CvPADLIST(cv)) ));
+    debug_print(("PadlistMAX(CvPADLIST(cv)) = %ld\n",
+                  PadlistMAX(CvPADLIST(cv)) ));
     
-    for (i=av_len(pad_namelist); i>=0; --i) {
-      SV** name_ptr = av_fetch(pad_namelist, i, 0);
+    for (i=PadnamelistMAX(pad_namelist); i>=0; --i) {
+      PADNAME* name_sv = PadnamelistARRAY(pad_namelist)[i];
 
-      if (name_ptr && SvPOKp(*name_ptr)) {
-        SV*   name_sv   = *name_ptr;
-        char* name_str  = SvPVX(name_sv);
+      if (name_sv && PadnamePV(name_sv)) {
+        char* name_str  = PadnamePV(name_sv);
         STRLEN name_len = strlen(name_str);
         
-        if (SvFAKE(name_sv) && 0 == (SvFLAGS(name_sv) & SVpad_OUR)) {
-            SV **val   = av_fetch(pad_vallist, i, 0);
-            SV *val_sv = val ? *val : &PL_sv_undef;
+        if (PadnameOUTER(name_sv) && !PadnameIsOUR(name_sv)) {
+            SV *val_sv   = PadARRAY(pad_vallist)[i];
+	    if (!val_sv) val_sv = &PL_sv_undef;
 #ifdef PADWALKER_DEBUGGING
             debug_print(("Found a fake slot: %s\n", name_str));
             if (val == 0)
@@ -412,18 +434,15 @@ get_var_name(CV *cv, SV *var)
 {
     I32 i;
     U32 val_depth = CvDEPTH(cv) ? CvDEPTH(cv) : 1;
-    AV *pad_namelist = (AV*) *av_fetch(CvPADLIST(cv), 0, FALSE);
-    AV *pad_vallist  = (AV*) *av_fetch(CvPADLIST(cv), val_depth, FALSE);
+    PADNAMELIST *pad_namelist = PadlistNAMES(CvPADLIST(cv));
+    PAD *pad_vallist  = PadlistARRAY(CvPADLIST(cv))[val_depth];
 
-    for (i=av_len(pad_namelist); i>=0; --i) {
-      SV** name_ptr = av_fetch(pad_namelist, i, 0);
+    for (i=PadnamelistMAX(pad_namelist); i>=0; --i) {
+      PADNAME* name = PadnamelistARRAY(pad_namelist)[i];
+      char* name_str;
 
-      if (name_ptr && SvPOKp(*name_ptr)) {
-        SV*   name_sv   = *name_ptr;
-        char* name_str  = SvPVX(name_sv);
-        
-        SV **val   = av_fetch(pad_vallist, i, 0);
-        if (val && (*val == var))
+      if (  name && (name_str = PadnamePV(name))
+         && PadARRAY(pad_vallist)[i] == var) {
           return name_str;
       }
     }
@@ -529,32 +548,30 @@ HV* pad;
     I32 i;
     CV *cv = (CV *)SvRV(sv);
     U32 val_depth = CvDEPTH(cv) ? CvDEPTH(cv) : 1;
-    AV *pad_namelist = (AV*) *av_fetch(CvPADLIST(cv), 0, FALSE);
-    AV *pad_vallist  = (AV*) *av_fetch(CvPADLIST(cv), val_depth, FALSE);
+    PADNAMELIST *pad_namelist = PadlistNAMES(CvPADLIST(cv));
+    PAD *pad_vallist  = PadlistARRAY(CvPADLIST(cv))[val_depth];
   CODE:
-    for (i=av_len(pad_namelist); i>=0; --i) {
-      SV** name_ptr = av_fetch(pad_namelist, i, 0);
+    for (i=PadnamelistMAX(pad_namelist); i>=0; --i) {
+      PADNAME* name = PadnamelistARRAY(pad_namelist)[i];
+      char* name_str;
 
-      if (name_ptr && SvPOKp(*name_ptr)) {
-        SV*   name_sv   = *name_ptr;
-        char* name_str  = SvPVX(name_sv);
+      if (name && (name_str = PadnamePV(name))) {
         STRLEN name_len = strlen(name_str);
 
-        if (SvFAKE(name_sv) && 0 == (SvFLAGS(name_sv) & SVpad_OUR)) {
+        if (PadnameOUTER(name) && !PadnameIsOUR(name)) {
           SV **restore_ref = hv_fetch(pad, name_str, name_len, FALSE);
           if ( restore_ref ) {
             if ( SvROK(*restore_ref) ) {
               SV *restore = SvRV(*restore_ref);
-              SV **orig = av_fetch(pad_vallist, i, 0);
+              SV *orig = PadARRAY(pad_vallist)[i];
               int restore_type = SvTYPE(restore);
 
-              if ( !orig || !*orig || is_correct_type(*orig, restore) ) {
+              if ( !orig || is_correct_type(orig, restore) ) {
                 SvREFCNT_inc(restore);
 
-                if ( av_store(pad_vallist, i, restore) == NULL )
-                  SvREFCNT_dec(restore);
+                PadARRAY(pad_vallist)[i] = restore;
               } else {
-                croak("Incorrect reftype for variable %s (got %s expected %s)", name_str, sv_reftype(restore, 0), sv_reftype(*orig, 0));
+                croak("Incorrect reftype for variable %s (got %s expected %s)", name_str, sv_reftype(restore, 0), sv_reftype(orig, 0));
               }
             } else {
               croak("The variable for %s is not a reference", name_str);

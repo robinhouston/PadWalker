@@ -148,3 +148,8 @@ of time. Sorry about that.
 	- Make one of the tests a bit more flexible, to accommodate a subtle
 	  change in behaviour caused by a recent change to perl
 	  (viz a0d2bbd5c47035a4f7369e4fddd46b502764d86e).
+
+1.95  Thu 23 Aug 2012 11:42:21 BST
+	- Pad changes in 5.17.4-to-be
+	  This is a patch from Father Chrysostomous.
+	  See https://rt.cpan.org/Public/Bug/Display.html?id=79154
