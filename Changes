@@ -144,3 +144,7 @@ of time. Sorry about that.
       the fact that this didn’t used to exist is the reason we managed META.yml
       by hand till now.
 
+1.94  Tue 26 Jun 2012 09:51:27 BST
+	- Make one of the tests a bit more flexible, to accommodate a subtle
+	  change in behaviour caused by a recent change to perl
+	  (viz a0d2bbd5c47035a4f7369e4fddd46b502764d86e).
