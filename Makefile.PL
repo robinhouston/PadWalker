@@ -1,7 +1,7 @@
 use ExtUtils::MakeMaker;
 
 use strict;
-require 5.008002;
+require 5.008001;
 
 # Remember (like I didn't) that WriteMakefile looks at @ARGV,
 # so an alternative way to configure a debugging build is:
@@ -34,5 +34,5 @@ WriteMakefile(
     'INC'	=> '',     # e.g., '-I/usr/include/other',
     ($DEBUGGING ? (CCFLAGS => '-Wall -ansi') : ()),
     dist => {TAR => 'env COPYFILE_DISABLE=true tar'},
-    MIN_PERL_VERSION => "5.008002",
+    MIN_PERL_VERSION => "5.008001",
 );

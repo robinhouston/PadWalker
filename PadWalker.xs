@@ -74,7 +74,7 @@ show_cxstack(void)
 #ifndef PadARRAY
 typedef AV PADNAMELIST;
 typedef SV PADNAME;
-# if PERL_VERSION < 9
+# if PERL_VERSION < 8 || (PERL_VERSION == 8 && !PERL_SUBVERSION)
 typedef AV PADLIST;
 typedef AV PAD;
 # endif

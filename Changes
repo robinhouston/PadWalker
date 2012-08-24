@@ -153,3 +153,7 @@ of time. Sorry about that.
 	- Pad changes in 5.17.4-to-be
 	  This is a patch from Father Chrysostomous.
 	  See https://rt.cpan.org/Public/Bug/Display.html?id=79154
+
+1.96  Fri 24 Aug 2012 13:03:31 BST
+	- Restore compatibility with Perl 5.8
+	  Thanks again to Father Chrysostomous
