@@ -14,7 +14,7 @@
 #ifdef PADWALKER_DEBUGGING
 # define debug_print(x) printf x
 #else
-# define debug_print(x)
+# define debug_print(x) do {} while (0)
 #endif
 
 /* For debugging */
