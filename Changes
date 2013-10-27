@@ -162,3 +162,6 @@ of time. Sorry about that.
     - Improve peek_sub error handling
 	  Thanks to Zefram for the bug report.
 	  See https://rt.cpan.org/Ticket/Display.html?id=89679
+
+1.98  Sun 27 Oct 2013 16:27:19 GMT
+	- Make new test compatible with old versions of perl.

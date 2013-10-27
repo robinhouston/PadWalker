@@ -50,8 +50,8 @@ my $h = peek_sub(sub {my $y = $x});
 print (($h->{'$x'} == \$x) ? "ok 4\n" : "not ok 4\n");
 
 # Make sure it correctly signals an exception if the sub is not a Perl sub
-eval { peek_sub(undef); };
-print (($@ =~ /cv is not a CODE reference/) ? "ok 5\n" : "not ok 5\n");
+eval { no warnings "uninitialized"; peek_sub(undef); };
+print (($@ =~ /cv is not a code reference/i) ? "ok 5\n" : "not ok 5\n");
 
 eval { peek_sub(\&peek_sub); };
 print (($@ =~ /cv has no padlist/) ? "ok 6\n" : "not ok 6\n");
