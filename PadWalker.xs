@@ -285,7 +285,10 @@ padlist_into_hash(PADLIST* padlist, HV* my_hash, HV* our_hash,
     
     if (depth == 0) depth = 1;
 
-    /* We blindly deref this, cos it's always there (AFAIK!) */
+    if (!padlist) {
+        /* Probably an XSUB */
+        die("PadWalker: cv has no padlist");
+    }
     pad_namelist = PadlistNAMES(padlist);
     pad_vallist  = PadlistARRAY(padlist)[depth];
 
@@ -408,7 +411,7 @@ get_closed_over(CV *cv, HV *hash, HV *indices)
         
         if (PadnameOUTER(name_sv) && !PadnameIsOUR(name_sv)) {
             SV *val_sv   = PadARRAY(pad_vallist)[i];
-	    if (!val_sv) val_sv = &PL_sv_undef;
+            if (!val_sv) val_sv = &PL_sv_undef;
 #ifdef PADWALKER_DEBUGGING
             debug_print(("Found a fake slot: %s\n", name_str));
             if (val == 0)

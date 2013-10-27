@@ -157,3 +157,8 @@ of time. Sorry about that.
 1.96  Fri 24 Aug 2012 13:03:31 BST
 	- Restore compatibility with Perl 5.8
 	  Thanks again to Father Chrysostomous
+
+1.97  Sun 27 Oct 2013 10:09:41 GMT
+    - Improve peek_sub error handling
+	  Thanks to Zefram for the bug report.
+	  See https://rt.cpan.org/Ticket/Display.html?id=89679
