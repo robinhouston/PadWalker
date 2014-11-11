@@ -538,6 +538,8 @@ CV* cv;
     HV* ret = newHV();
     HV* ignore = newHV();
   PPCODE:
+    if (CvISXSUB(cv))
+      die("PadWalker: cv has no padlist");
     padlist_into_hash(CvPADLIST(cv), ret, ignore, 0, CvDEPTH(cv));
     SvREFCNT_dec((SV*) ignore);
     EXTEND(SP, 1);
