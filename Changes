@@ -170,3 +170,7 @@ of time. Sorry about that.
     - Make it compatible with bleadperl.
       Patch from Father Chrysostomous at https://rt.cpan.org/Public/Bug/Display.html?id=100262
 
+1.99_1  Tue 11 Nov 2014 19:38:17 CET
+    - Restore compatibility with perl 5.8
+      Patch from paul@city-fan.org at https://rt.cpan.org/Public/Bug/Display.html?id=100262#txn-1431869
+

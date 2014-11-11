@@ -10,6 +10,10 @@
 #  define CxOLD_OP_TYPE(cx)      (0 + (cx)->blk_eval.old_op_type)
 #endif
 
+#ifndef CvISXSUB
+#define CvISXSUB(sv) CvXSUB(sv)
+#endif
+
 /* For development testing */
 #ifdef PADWALKER_DEBUGGING
 # define debug_print(x) printf x
