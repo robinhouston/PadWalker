@@ -245,7 +245,7 @@ pads_into_hash(PADNAMELIST* pad_namelist, PAD* pad_vallist, HV* my_hash,
           {
             SV *val_sv;
             U32 name_len = strlen(name_str);
-            bool is_our = ((SvFLAGS(name_sv) & SVpad_OUR) != 0);
+            bool is_our = PadnameIsOUR(name_sv);
 
             debug_print(((is_our ? "**     FOUND OUR %s\n"
                                  : "**     FOUND MY %s\n"), name_str));
