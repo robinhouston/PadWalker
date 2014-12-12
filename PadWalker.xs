@@ -232,9 +232,6 @@ pads_into_hash(PADNAMELIST* pad_namelist, PAD* pad_vallist, HV* my_hash,
          * so also check that the name is longer than one char.
          * (Note that the prefix letter is here as well, so a
          * valid variable will _always_ be >1 char)
-
-         * We ignore 'our' variables, since you can always dig
-         * them out of the stash directly.
          */
 
         if ((PadnameOUTER(name_sv) || 0 == valid_at_seq ||
