@@ -174,3 +174,6 @@ of time. Sorry about that.
     - Restore compatibility with perl 5.8
       Patch from paul@city-fan.org at https://rt.cpan.org/Public/Bug/Display.html?id=100262#txn-1431869
 
+1.99_2  Mon  8 Dec 2014 13:45:37 GMT
+    - Restore compatibility with bleadperl
+      Patch from Dagfinn Ilmari Mannsåker at https://github.com/robinhouston/PadWalker/pull/3
