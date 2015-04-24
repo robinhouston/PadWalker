@@ -1,7 +1,7 @@
 use strict; use warnings;
 use PadWalker 'closed_over', 'set_closed_over';
 
-print "1..29\n";
+print "1..30\n";
 
 my $x=2;
 my $h = closed_over (my $sub = sub {my $y = $x++});
@@ -104,3 +104,6 @@ print (keys %$indices == 0 ? "ok 16\n" : "not ok 16\n");
 
     print( $@ ? "not ok 29\n" : "ok 29\n" );
 }
+
+$h = closed_over(\&utf8::encode);
+print +(%$h == 0 ? "ok 30" : "not ok 30") . " - closed_over on XSUB\n";

@@ -392,7 +392,7 @@ get_closed_over(CV *cv, HV *hash, HV *indices)
     PADNAMELIST *pad_namelist;
     PAD *pad_vallist;
 
-    if (!CvPADLIST(cv)) {
+    if (CvISXSUB(cv) || !CvPADLIST(cv)) {
         return;
     }
 
