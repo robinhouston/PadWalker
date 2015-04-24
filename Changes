@@ -177,3 +177,7 @@ of time. Sorry about that.
 2.0  Mon  8 Dec 2014 13:45:37 GMT
     - Restore compatibility with bleadperl
       Patch from Dagfinn Ilmari Mannsåker at https://github.com/robinhouston/PadWalker/pull/3
+
+2.1  Fri 24 Apr 2015 20:29:12 BST
+    - Another bleadperl fix
+      https://rt.cpan.org/Public/Bug/Display.html?id=101037
