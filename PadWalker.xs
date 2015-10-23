@@ -1,3 +1,4 @@
+#define PERL_NO_GET_CONTEXT
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -172,7 +173,7 @@ upcontext(pTHX_ I32 count, COP **cop_p, PERL_CONTEXT **ccstack_p,
 /* end thievery */
 
 SV*
-fetch_from_stash(HV *stash, char *name_str, U32 name_len)
+fetch_from_stash(pTHX_ HV *stash, char *name_str, U32 name_len)
 {
     /* This isn't the most efficient approach, but it has
      * the advantage that it uses documented API functions. */
@@ -204,7 +205,7 @@ fetch_from_stash(HV *stash, char *name_str, U32 name_len)
 }
 
 void
-pads_into_hash(PADNAMELIST* pad_namelist, PAD* pad_vallist, HV* my_hash,
+pads_into_hash(pTHX_ PADNAMELIST* pad_namelist, PAD* pad_vallist, HV* my_hash,
                HV* our_hash, U32 valid_at_seq)
 {
     I32 i;
@@ -254,7 +255,7 @@ pads_into_hash(PADNAMELIST* pad_namelist, PAD* pad_vallist, HV* my_hash,
             }
             else {
               if (is_our) {
-                val_sv = fetch_from_stash(PadnameOURSTASH(name_sv),
+                val_sv = fetch_from_stash(aTHX_ PadnameOURSTASH(name_sv),
                                           name_str, name_len);
                 if (!val_sv) {
                     debug_print(("Value of our variable is undefined\n"));
@@ -278,7 +279,7 @@ pads_into_hash(PADNAMELIST* pad_namelist, PAD* pad_vallist, HV* my_hash,
 }
 
 void
-padlist_into_hash(PADLIST* padlist, HV* my_hash, HV* our_hash,
+padlist_into_hash(pTHX_ PADLIST* padlist, HV* my_hash, HV* our_hash,
                   U32 valid_at_seq, long depth)
 {
     PADNAMELIST *pad_namelist;
@@ -293,11 +294,11 @@ padlist_into_hash(PADLIST* padlist, HV* my_hash, HV* our_hash,
     pad_namelist = PadlistNAMES(padlist);
     pad_vallist  = PadlistARRAY(padlist)[depth];
 
-    pads_into_hash(pad_namelist, pad_vallist, my_hash, our_hash, valid_at_seq);
+    pads_into_hash(aTHX_ pad_namelist, pad_vallist, my_hash, our_hash, valid_at_seq);
 }
 
 void
-context_vars(PERL_CONTEXT *cx, HV* my_ret, HV* our_ret, U32 seq, CV *cv)
+context_vars(pTHX_ PERL_CONTEXT *cx, HV* my_ret, HV* our_ret, U32 seq, CV *cv)
 {
     /* If cx is null, we take that to mean that we should look
      * at the cv instead
@@ -319,7 +320,7 @@ context_vars(PERL_CONTEXT *cx, HV* my_ret, HV* our_ret, U32 seq, CV *cv)
             debug_print(("\tcv name = %s; depth=%ld\n",
                     CvGV(cur_cv) ? GvNAME(CvGV(cur_cv)) :"(null)", depth));
             if (CvPADLIST(cur_cv))
-                padlist_into_hash(CvPADLIST(cur_cv), my_ret, our_ret, seq, depth);
+                padlist_into_hash(aTHX_ CvPADLIST(cur_cv), my_ret, our_ret, seq, depth);
             cur_cv = CvOUTSIDE(cur_cv);
             if (cur_cv) depth  = CvDEPTH(cur_cv);
         }
@@ -327,7 +328,7 @@ context_vars(PERL_CONTEXT *cx, HV* my_ret, HV* our_ret, U32 seq, CV *cv)
 }
 
 void
-do_peek(I32 uplevel, HV* my_hash, HV* our_hash)
+do_peek(pTHX_ I32 uplevel, HV* my_hash, HV* our_hash)
 {
     PERL_CONTEXT *cx, *ccstack;
     COP *cop = 0;
@@ -346,7 +347,7 @@ do_peek(I32 uplevel, HV* my_hash, HV* our_hash)
         }
     debug_print(("**Cop file = %s\n", CopFILE(cop)));
 
-    context_vars(cx, my_hash, our_hash, cop->cop_seq, PL_main_cv);
+    context_vars(aTHX_ cx, my_hash, our_hash, cop->cop_seq, PL_main_cv);
 
     for (i = cxix_from-1; i > cxix_to; --i) {
         debug_print(("** CxTYPE = %s (cxix = %ld)\n",
@@ -357,17 +358,17 @@ do_peek(I32 uplevel, HV* my_hash, HV* our_hash)
             switch(CxOLD_OP_TYPE(&ccstack[i])) {
             case OP_ENTEREVAL:
                 if (first_eval) {
-                   context_vars(0, my_hash, our_hash, cop->cop_seq, ccstack[i].blk_eval.cv);
+                   context_vars(aTHX_ 0, my_hash, our_hash, cop->cop_seq, ccstack[i].blk_eval.cv);
                    first_eval = FALSE;
                 }
-                context_vars(0, my_hash, our_hash, ccstack[i].blk_oldcop->cop_seq,
+                context_vars(aTHX_ 0, my_hash, our_hash, ccstack[i].blk_oldcop->cop_seq,
                                                 ccstack[i].blk_eval.cv);
                 break;
             case OP_REQUIRE:
             case OP_DOFILE:
                 debug_print(("blk_eval.cv = %p\n", (void*) ccstack[i].blk_eval.cv));
                 if (first_eval)
-                   context_vars(0, my_hash, our_hash,
+                   context_vars(aTHX_ 0, my_hash, our_hash,
                     cop->cop_seq, ccstack[i].blk_eval.cv);
                 return;
                 /* If it's OP_ENTERTRY, we skip this altogether. */
@@ -385,7 +386,7 @@ do_peek(I32 uplevel, HV* my_hash, HV* our_hash)
 }
 
 void
-get_closed_over(CV *cv, HV *hash, HV *indices)
+get_closed_over(pTHX_ CV *cv, HV *hash, HV *indices)
 {
     I32 i;
     U32 val_depth;
@@ -454,7 +455,7 @@ get_var_name(CV *cv, SV *var)
 }
 
 CV *
-up_cv(I32 uplevel, const char * caller_name)
+up_cv(pTHX_ I32 uplevel, const char * caller_name)
 {
     PERL_CONTEXT *cx, *ccstack;
     I32 cxix_from, cxix_to, i;
@@ -514,7 +515,7 @@ I32 uplevel;
     HV* ret = newHV();
     HV* ignore = newHV();
  PPCODE:
-    do_peek(uplevel, ret, ignore);
+    do_peek(aTHX_ uplevel, ret, ignore);
     SvREFCNT_dec((SV*) ignore);
     EXTEND(SP, 1);
     PUSHs(sv_2mortal(newRV_noinc((SV*)ret)));
@@ -526,7 +527,7 @@ I32 uplevel;
     HV* ret = newHV();
     HV* ignore = newHV();
  PPCODE:
-    do_peek(uplevel, ignore, ret);
+    do_peek(aTHX_ uplevel, ignore, ret);
     SvREFCNT_dec((SV*) ignore);
     EXTEND(SP, 1);
     PUSHs(sv_2mortal(newRV_noinc((SV*)ret)));
@@ -541,7 +542,7 @@ CV* cv;
   PPCODE:
     if (CvISXSUB(cv))
       die("PadWalker: cv has no padlist");
-    padlist_into_hash(CvPADLIST(cv), ret, ignore, 0, CvDEPTH(cv));
+    padlist_into_hash(aTHX_ CvPADLIST(cv), ret, ignore, 0, CvDEPTH(cv));
     SvREFCNT_dec((SV*) ignore);
     EXTEND(SP, 1);
     PUSHs(sv_2mortal(newRV_noinc((SV*)ret)));
@@ -598,14 +599,14 @@ CV* cv;
   PPCODE:
     if (GIMME_V == G_ARRAY) {
         targs = newHV();
-        get_closed_over(cv, ret, targs);
+        get_closed_over(aTHX_ cv, ret, targs);
     
         EXTEND(SP, 2);
         PUSHs(sv_2mortal(newRV_noinc((SV*)ret)));
         PUSHs(sv_2mortal(newRV_noinc((SV*)targs)));
     }
     else {
-        get_closed_over(cv, ret, 0);
+        get_closed_over(aTHX_ cv, ret, 0);
         
         EXTEND(SP, 1);
         PUSHs(sv_2mortal(newRV_noinc((SV*)ret)));
@@ -626,7 +627,7 @@ SV* var_ref;
       if (SvTYPE(cv) != SVt_PVCV)
         croak("PadWalker::var_name: sub is neither a CODE reference nor a number");
     } else
-      cv = (SV *) up_cv(SvIV(sub), "PadWalker::upcontext");
+      cv = (SV *) up_cv(aTHX_ SvIV(sub), "PadWalker::upcontext");
     
     RETVAL = get_var_name((CV *) cv, SvRV(var_ref));
   OUTPUT:
