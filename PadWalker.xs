@@ -15,6 +15,10 @@
 #define CvISXSUB(sv) CvXSUB(sv)
 #endif
 
+#ifndef PadnameUTF8
+#  define PadnameUTF8(pn) FALSE
+#endif
+
 /* For development testing */
 #ifdef PADWALKER_DEBUGGING
 # define debug_print(x) printf x
