@@ -1,20 +1,17 @@
 package PadWalker;
 
 use strict;
-use vars qw($VERSION @ISA @EXPORT_OK %EXPORT_TAGS);
 
 require Exporter;
-require DynaLoader;
+use XSLoader ();
 
-require 5.008;
+our @ISA = qw(Exporter);
+our @EXPORT_OK = qw(peek_my peek_our closed_over peek_sub var_name set_closed_over);
+our %EXPORT_TAGS = (all => \@EXPORT_OK);
 
-@ISA = qw(Exporter DynaLoader);
-@EXPORT_OK = qw(peek_my peek_our closed_over peek_sub var_name set_closed_over);
-%EXPORT_TAGS = (all => \@EXPORT_OK);
+our $VERSION = '2.5';
 
-$VERSION = '2.5';
-
-bootstrap PadWalker $VERSION;
+XSLoader::load 'PadWalker', $VERSION;
 
 sub peek_my;
 sub peek_our;
