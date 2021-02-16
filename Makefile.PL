@@ -35,4 +35,19 @@ WriteMakefile(
     ($DEBUGGING ? (CCFLAGS => '-Wall -ansi') : ()),
     dist => {TAR => 'env COPYFILE_DISABLE=true tar'},
     MIN_PERL_VERSION => "5.008001",
+
+    META_MERGE => {
+        'meta-spec' => { version => 2 },
+         resources => {
+             repository => {
+                 type => 'git',
+                 url  => 'https://github.com/robinhouston/PadWalker.git',
+                 web  => 'https://github.com/robinhouston/PadWalker',
+             },
+             bugtracker => {
+                 web => 'https://github.com/robinhouston/PadWalker/issues'
+             },
+             homepage   => 'https://metacpan.org/pod/PadWalker',
+         },
+    },
 );
