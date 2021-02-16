@@ -1,0 +1,12 @@
+.github/
+.git/
+.gitignore
+blib/
+.*.bak
+MYMETA.*
+MANIFEST.SKIP
+pm_to_blib
+Makefile$
+PadWalker.bs
+PadWalker.c
+PadWalker.o
